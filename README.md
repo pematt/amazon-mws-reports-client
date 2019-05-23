@@ -1,9 +1,9 @@
 # amazon-mws-reports-client
 
-See the tests for usage.
+Until this document has been updated, then see the tests for usage.
 
 Parameters:
-
+```
 const parametersExample = {
   connection: {
     MaxErrorRetry: 3,
@@ -55,3 +55,4 @@ const parametersExample = {
     mock: false
   }
 }
+```
