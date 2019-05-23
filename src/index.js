@@ -2,7 +2,7 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec); // https://nodejs.org/api/child_process.html#child_process_child_process_exec_command_options_callback
 const path = require('path');
 
-// TODO: comment out the parametersExample
+// TODO: comment out the parametersExample 
 const parametersExample = {
   connection: {
     MaxErrorRetry: 3,
