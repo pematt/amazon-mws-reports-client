@@ -1,0 +1,15 @@
+{
+  "name": "amazon-mws-reports-client",
+  "version": "0.0.1",
+  "description": "Amazon MWS Reports Client",
+  "main": "src/index.js",
+  "scripts": {
+    "test-mock": "node ./test/mock.js",
+    "start": "node src/"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "amazon-mws-reports": "^2009.1.1-2"
+  }
+}
