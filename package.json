@@ -1,6 +1,6 @@
 {
   "name": "amazon-mws-reports-client",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Amazon MWS Reports Client",
   "main": "src/index.js",
   "scripts": {
@@ -10,6 +10,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "amazon-mws-reports": "^2009.1.1-2"
-  }
+    "amazon-mws-reports": ">=2009.1.1-2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pematt/amazon-mws-reports-client.git"
+  },
 }

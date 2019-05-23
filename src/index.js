@@ -72,7 +72,7 @@ module.exports = async function (parameters) {
   }
 
   const exec = util.promisify(require('child_process').exec);
-  const phpScript = "src/php/RequestReport.php";
+  const phpScript = path.dirname(__filename) + "/php/RequestReport.php";
   const loc = 'amazon-mws-reports-client:';
   const debug = parameters.dev && parameters.dev.debug;
   const execDefaults = {
@@ -100,6 +100,7 @@ module.exports = async function (parameters) {
     console.log(loc, 'execOptions:', execOptions);
     console.log(loc, 'systemOptions:', systemOptions);
     console.log(loc, 'command:', command);
+    console.log(loc, 'path.dirname:', path.dirname(__filename));
   }
 
   try {
