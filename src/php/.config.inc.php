@@ -41,7 +41,8 @@
     * Only needed when running library from local directory.
     * If library is installed in PHP include path, this is not needed
     ***********************************************************************/
-    set_include_path(get_include_path() . PATH_SEPARATOR . '../../node_modules/amazon-mws-reports/src/.');    
+    set_include_path(get_include_path() . PATH_SEPARATOR .
+      realpath('.') . '/node_modules/amazon-mws-reports/src/.');      
 
    /************************************************************************
     * OPTIONAL ON SOME INSTALLATIONS
