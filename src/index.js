@@ -113,7 +113,7 @@ module.exports = async function (parametersIn) {
     return stdout;
   }
   catch (err) {
-    console.error(PACKET_NAME . ':', err);
+    console.error(PACKET_NAME, err);
   }
 
   return null;
