@@ -5,6 +5,9 @@
 ## Installation
 ```npm i amazon-mws-reports-client --save```
 
+Make sure you have a working php installation as well. To install php on Ubuntu:
+```sudo apt install php```
+
 ## Example use
 ```
 const requestReport = require('amazon-mws-reports-client');
