@@ -25,36 +25,17 @@
  *  Modified 2019-05-22 (YYYY-MM-DD)
  */
 
-// log command line arguments
-// used for testing v0.0.1 invocation
-echo 'argc:', PHP_EOL;
-var_dump($argc); // the number of arguments passed
-echo 'argv:', PHP_EOL;
-var_dump($argv); // the arguments passed
-
-echo json_encode($argv[1]);
-
-$sleepSeconds = 2;
-echo PHP_EOL . 'Now sleeping for ' . $sleepSeconds . ' seconds.';
-sleep($sleepSeconds);
-
-$response = 'END:-_]%£j+: Processing successfully completed. Exit code: 1. Filename: /ksf/djkfs/jkdfjkas.csv';
-echo PHP_EOL, $response;
-// end test
-
-
 include_once ('.config.inc.php');
 
+// create php object from command line json parameters
 $parameters = json_decode(utf8_encode($argv[1]));
 
-function echo2($text) {
-  GLOBAL $parameters;
-  if ($parameters->dev->debug) {
-    echo $text;
-  }
-}
+echo2('argc: ' . $argc);
+echo2('argv: ' . json_encode($argv));
 
-echo2 PHP_EOL . PHP_EOL . "echo 2 here";
+$sleepSeconds = 2;
+echo2('Now sleeping for ' . $sleepSeconds . ' seconds.');
+sleep($sleepSeconds);
 
 /************************************************************************
 * Uncomment to configure the client instance. Configuration settings
@@ -158,7 +139,28 @@ if ($parameters->connection->MwsAuthToken) {
 // Using ReportOptions
 // $request->setReportOptions('ShowSalesChannel=true');
 
- invokeRequestReport($service, $request);
+$response = 'Processing successfully completed.';
+if ($parameters->result->destination = 'file') {
+  $response .= 'Filename: ' . $parameters->result->destination->file->name;
+}
+echo $response;
+
+
+/////////////////////////////////////////////////////////
+// FUNCTION DEFINITIONS
+
+function debug () {
+  GLOBAL $parameters;
+  return $parameters->dev->debug;
+}
+
+function echo2 ($text) {
+  if (debug) {
+    echo $text . PHP_EOL;
+  }
+}
+
+invokeRequestReport($service, $request);
 
 /**
   * Get Report List Action Sample
