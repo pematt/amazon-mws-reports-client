@@ -5,7 +5,7 @@
 ## Installation
 ```npm i amazon-mws-reports-client --save```
 
-Make sure you have a working php installation as well. To install php on Ubuntu: ```sudo apt install php```
+Make sure you have a working php installation with curl support. Ubuntu installation: ```sudo apt install php php-curl```
 
 ## Example use
 ```javascript
