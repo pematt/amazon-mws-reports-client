@@ -1,8 +1,11 @@
 # amazon-mws-reports-client
 
-Until this document has been updated, then see the tests for usage.
+**Status: not ready for use yet.**
 
-Example use:
+## Installation
+```npm i amazon-mws-reports-client --save```
+
+## Example use
 ```
 const requestReport = require('amazon-mws-reports-client');
 
@@ -58,7 +61,7 @@ async function runTest () {
 runTest();
 ```
 
-Parameters:
+## Parameters
 ```
 const parametersExample = {
   connection: {
