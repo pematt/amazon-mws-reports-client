@@ -47,7 +47,7 @@ const parametersExample = {
     maxBuffer: 1024 * 1024
   },
   system: {
-    phpCommand: 'php' // in case there are more than one php binary on the system one can select a specific version here
+    phpCommand: 'php' // in case there are more than one way to invoke php then one can select one here
   },
   dev: {
     debug: false,
