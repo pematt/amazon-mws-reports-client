@@ -2,6 +2,11 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec); // https://nodejs.org/api/child_process.html#child_process_child_process_exec_command_options_callback
 const path = require('path');
 
+const PACKET_NAME = 'amazon-mws-reports-client';
+const PACKET_NAME_HR = 'Amazon MWS Reports Client Exception';
+const ERR_TYPE_QUOTE = 0;
+const ERR_TYPE_MISSING = 1;
+
 const parametersDefaults = {
   connection: {
     MaxErrorRetry: 3, // mandatory
@@ -54,28 +59,35 @@ const parametersDefaults = {
   }
 }
 
-function ClientException(message) {
-   this.message = message;
-   this.name = 'Amazon MWS Reports Client Exception';
-   this.file = path.basename(__filename);
-   this.npmPacket = 'amazon-mws-reports-client';
+function ClientException(message, type = ERR_TYPE_QUOTE) {
+  this.packet = PACKET_NAME_HR;
+  this.file = path.basename(__filename);
+  this.npmPacket = PACKET_NAME;
+
+  switch (type) {
+    case ERR_TYPE_MISSING:
+      this.message = 'The input parameters object is missing the mandatory property "' + message + '".';
+      break;
+    default:
+      this.message = message;
+   }
 }
 
 module.exports = async function (parametersIn) {
 
   if (!(parametersIn)) {
-    throw new ClientException('No parameters received');
+    throw new ClientException('No parameters received.');
   }
   if (!(parametersIn.merchant)) {
-    throw new ClientException('Parameters missing mandatory property "merchant"');
+    throw new ClientException('merchant', ERR_TYPE_MISSING);
   }
+  // TODO: check all mandatory properties here
 
   // parametersIn's properties overwrites parametersDefault's properties with the same name
   const parameters = { ...parametersDefaults, ...parametersIn }
 
   const exec = util.promisify(require('child_process').exec);
   const phpScript = path.dirname(__filename) + "/php/RequestReport.php";
-  const loc = 'amazon-mws-reports-client:';
   const debug = parameters.dev && parameters.dev.debug;
 
   const command = parameters.system.phpCommand + " " + phpScript + " '" + JSON.stringify(parameters) + "'"
@@ -84,24 +96,24 @@ module.exports = async function (parametersIn) {
   ;
 
   if (debug) {
-    console.log(loc, 'phpScript:', phpScript);
-    console.log(loc, 'parameters:', parameters);
-    console.log(loc, 'command:', command);
-    console.log(loc, 'path.dirname:', path.dirname(__filename));
+    console.log(PACKET_NAME, ': phpScript:', phpScript);
+    console.log(PACKET_NAME, ': parameters:', parameters);
+    console.log(PACKET_NAME, ': command:', command);
+    console.log(PACKET_NAME, ': path.dirname:', path.dirname(__filename));
   }
 
   try {
     const { stdout, stderr } = await exec(command, parameters.exec);
     if (stderr) {
-      console.error(loc, `error: ${stderr}`);
+      console.error(PACKET_NAME, `: error: ${stderr}`);
     }
     if (debug) {
-      console.log(loc, `Response: ${stdout}`);
+      console.log(PACKET_NAME, `: Response: ${stdout}`);
     }
     return stdout;
   }
   catch (err) {
-    console.error(loc, err);
+    console.error(PACKET_NAME . ':', err);
   }
 
   return null;
