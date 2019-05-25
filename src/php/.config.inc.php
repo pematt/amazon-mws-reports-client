@@ -14,8 +14,8 @@
     * to anyone. It is important to keep your Secret Access Key confidential
     * to protect your account.
     ***********************************************************************/
-    define('AWS_ACCESS_KEY_ID', '<Your Access Key ID>');
-    define('AWS_SECRET_ACCESS_KEY', '<Your Secret Access Key>');
+    // define('AWS_ACCESS_KEY_ID', '<Your Access Key ID>');
+    // define('AWS_SECRET_ACCESS_KEY', '<Your Secret Access Key>');
 
    /************************************************************************
     * REQUIRED
@@ -23,8 +23,8 @@
     * All MWS requests must contain a User-Agent header. The application
     * name and version defined below are used in creating this value.
     ***********************************************************************/
-    define('APPLICATION_NAME', '<Your Application Name>');
-    define('APPLICATION_VERSION', '<Your Application Version or Build Number>');
+    // define('APPLICATION_NAME', '<Your Application Name>');
+    // define('APPLICATION_VERSION', '<Your Application Version or Build Number>');
 
    /************************************************************************
     * REQUIRED
@@ -32,7 +32,7 @@
     * All MWS requests must contain the seller's merchant ID and
     * marketplace ID.
     ***********************************************************************/
-    define ('MERCHANT_ID', '<Your Merchant ID>');
+    // define ('MERCHANT_ID', '<Your Merchant ID>');
 
    /************************************************************************
     * OPTIONAL ON SOME INSTALLATIONS
@@ -42,7 +42,7 @@
     * If library is installed in PHP include path, this is not needed
     ***********************************************************************/
     set_include_path(get_include_path() . PATH_SEPARATOR .
-      realpath('.') . '/node_modules/amazon-mws-reports/src/.');      
+      realpath('.') . '/node_modules/amazon-mws-reports/src/.');
 
    /************************************************************************
     * OPTIONAL ON SOME INSTALLATIONS
