@@ -2,6 +2,11 @@
 
    define ('DATE_FORMAT', 'Y-m-d\TH:i:s\Z');
 
+   define ('DEBUG_PREFIX', 'DEBUG: ');
+   define ('INFO_PREFIX', 'INFO: ');
+   define ('WARNING_PREFIX', 'WARNING: ');
+   define ('ERROR_PREFIX', 'ERROR: ');
+
    /************************************************************************
     * REQUIRED
     *

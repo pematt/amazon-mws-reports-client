@@ -16,7 +16,7 @@
  *  @copyright   Copyright 2009 Amazon Technologies, Inc.
  *  @link        http://aws.amazon.com
  *  @license     http://aws.amazon.com/apache2.0  Apache License, Version 2.0
- *  @version     0.0.1
+ *  @version     0.0.7
  */
 /*******************************************************************************
 
@@ -27,140 +27,154 @@
 
 include_once ('.config.inc.php');
 
+// echo('argc: ' . $argc);
+// echo('argv: ' . serialize($argv));
+
+// check for the existence of parameters
+if ($argc < 2) {
+  echo ERROR_PREFIX . "E1101: No parameters received. Aborting.";
+  exit(1101);
+}
+
+// we expect the parameters to be the first command line argument
+// all other command line arguments are ignored
+if ($argc > 2) {
+  echo WARNING_PREFIX . "W1002: More than one parameter received, only the first parameter is used.";
+}
+
 // create php object from command line json parameters
 $parameters = json_decode(utf8_encode($argv[1]));
 
-echo2('argc: ' . $argc);
-echo2('argv: ' . json_encode($argv));
-
-$sleepSeconds = 2;
-echo2('Now sleeping for ' . $sleepSeconds . ' seconds.');
-sleep($sleepSeconds);
-
-/************************************************************************
-* Uncomment to configure the client instance. Configuration settings
-* are:
-*
-* - MWS endpoint URL
-* - Proxy host and port.
-* - MaxErrorRetry.
-***********************************************************************/
-// IMPORTANT: Uncomment the approiate line for the country you wish to
-// sell in:
-// United States:
-//$serviceUrl = "https://mws.amazonservices.com";
-// United Kingdom
-//$serviceUrl = "https://mws.amazonservices.co.uk";
-// Germany
-//$serviceUrl = "https://mws.amazonservices.de";
-// France
-//$serviceUrl = "https://mws.amazonservices.fr";
-// Italy
-//$serviceUrl = "https://mws.amazonservices.it";
-// Japan
-//$serviceUrl = "https://mws.amazonservices.jp";
-// China
-//$serviceUrl = "https://mws.amazonservices.com.cn";
-// Canada
-//$serviceUrl = "https://mws.amazonservices.ca";
-// India
-//MwsAccessKeyId = "https://mws.amazonservices.in";
-
-$config = array (
-  'ServiceURL' => $parameters->target->MwsServiceURL,       // MwsAccessKeyId
-  'ProxyHost' => $parameters->connection->ProxyHost,        // null
-  'ProxyPort' => $parameters->connection->ProxyPort,        // -1
-  'MaxErrorRetry' => $parameters->connection->MaxErrorRetry // 3
-);
-
-/************************************************************************
- * Instantiate Implementation of MarketplaceWebService
- *
- * AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY constants
- * are defined in the .config.inc.php located in the same
- * directory as this sample
- ***********************************************************************/
- $service = new MarketplaceWebService_Client(
-     $parameters->merchant->MwsAccessKeyId,     // AWS_ACCESS_KEY_ID
-     $parameters->merchant->MwsSecretAccessKey, // AWS_SECRET_ACCESS_KEY
-     $config,
-     $parameters->developer->ApplicationName,   // APPLICATION_NAME,
-     $parameters->developer->ApplicationVersion // APPLICATION_VERSION
-   );
-
-/************************************************************************
- * Uncomment to try out Mock Service that simulates MarketplaceWebService
- * responses without calling MarketplaceWebService service.
- *
- * Responses are loaded from local XML files. You can tweak XML files to
- * experiment with various outputs during development
- *
- * XML files available under MarketplaceWebService/Mock tree
- *
- ***********************************************************************/
- // $service = new MarketplaceWebService_Mock();
-
-if ($parameters->dev->mock) {
-  $service = new MarketplaceWebService_Mock();
+if (!$parameters) {
+  echo ERROR_PREFIX . "E1010: The parameters could not be parsed. Aborting.";
+  exit(1010);
 }
 
-/************************************************************************
- * Setup request parameters and uncomment invoke to try out
- * sample for Report Action
- ***********************************************************************/
+logDebug("parameters: " . serialize($parameters));
+
+// todo: check for existence of all mandatory parameters
+
+// perhaps add some sleep to simulate longer execution time
+if ($parameters->dev && $parameters->dev->sleep) {
+  if (is_int($parameters->dev->sleep)) {
+    logDebug('Now sleeping for ' . $parameters->dev->sleep . ' seconds.');
+    sleep($parameters->dev->sleep);
+  } else {
+    echo WARNING_PREFIX . "1110: parameters.dev.sleep contains a non integer value. Not sleeping.";
+  }
+}
+
+// set up the mws service call parameters
+$service = null;
+if ($parameters->dev && $parameters->dev->mock) {
+
+  logDebug("we will not contact the mws service");
+
+  $service = new MarketplaceWebService_Mock();
+
+} else {
+
+  logDebug("we are contacting the mws service");
+
+  $config = array (
+    'ServiceURL'    => $parameters->api->network->mwsServiceURL,
+    'ProxyHost'     => $parameters->api->network->proxyHost,
+    'ProxyPort'     => $parameters->api->network->proxyPort,
+    'MaxErrorRetry' => $parameters->api->network->maxErrorRetry
+  );
+
+  $service = new MarketplaceWebService_Client(
+    $parameters->api->developer->mwsAccessKeyId,
+    $parameters->api->developer->mwsSecretAccessKey,
+    $config,
+    $parameters->api->developer->applicationName,
+    $parameters->api->developer->applicationVersion
+  );
+}
+
 // Constructing the MarketplaceId array which will be passed in as the the MarketplaceIdList
 // parameter to the RequestReportRequest object.
 //$marketplaceIdArray = array("Id" => array('<Marketplace_Id_1>','<Marketplace_Id_2>'));
-$marketplaceIdArray = array("Id" => array($parameters->target->MwsMarketplaceId));
-
- // @TODO: set request. Action can be passed as MarketplaceWebService_Model_ReportRequest
- // object or array of parameters
+$marketplaceIdArray = array("Id" => $parameters->api->query->parameters->mwsMarketplaceIds);
 
 $requestParameters = array (
-  'Merchant' => $parameters->merchant->AwsMerchantId, // MERCHANT_ID
+  'Merchant'          => $parameters->api->merchant->mwsMerchantId,
   'MarketplaceIdList' => $marketplaceIdArray,
-  'ReportType' => $parameters->query->MwsReportType, // '_GET_MERCHANT_LISTINGS_DATA_'
-  'ReportOptions' => $parameters->query->ReportOptions // 'ShowSalesChannel=true',
-  // 'MWSAuthToken' => '<MWS Auth Token>', // Optional
+  'ReportType'        => $parameters->api->query->operation,
+  'ReportOptions'     => $parameters->api->query->parameters->reportOptions,
+  'MWSAuthToken'      => $parameters->api->merchant->mwsAuthToken,
 );
 
 $request = new MarketplaceWebService_Model_RequestReportRequest($requestParameters);
 
-if ($parameters->connection->MwsAuthToken) {
-  $request->setMWSAuthToken($parameters->connection->MwsAuthToken); // Optional
-}
-
+// alternative
 // $request = new MarketplaceWebService_Model_RequestReportRequest();
 // $request->setMarketplaceIdList($marketplaceIdArray);
 // $request->setMerchant(MERCHANT_ID);
 // $request->setReportType('_GET_MERCHANT_LISTINGS_DATA_');
-// $request->setMWSAuthToken('<MWS Auth Token>'); // Optional
-
-// Using ReportOptions
+// $request->setMWSAuthToken('<MWS Auth Token>');
 // $request->setReportOptions('ShowSalesChannel=true');
 
-$response = 'Processing successfully completed.';
-if ($parameters->result->destination = 'file') {
-  $response .= 'Filename: ' . $parameters->result->destination->file->name;
+if (isDebug()) {
+  logDebug('Invoking Request Report...');
+  var_dump($service);
+  var_dump($request);
 }
-echo $response;
 
+$mwsResponse = invokeRequestReport($service, $request);
+$service = null; // unset
+$request = null; // unset
+
+logDebug('MWS Response: ' . $mwsResponse);
+
+// todo: check response code
+
+$response = null;
+if ($parameters->result->destination = 'file') {
+  // todo: save $mwsRresponse data part to file
+  $response = $parameters->result->file->name;
+}
+if ($parameters->result->destination = 'stdout') {
+  if ($parameters->result->stdout->format = 'json') {
+    // todo: assign only data part from $mwsResponse to $response
+    $response = json_encode(utf8_encode($mwsResponse));
+  }
+}
+$mwsResponse = null; // unset
+
+$exitPrefix = '';
+if ($parameters->result && $parameters->result->responsePrefix) {
+  $exitPrefix = $parameters->result->responsePrefix;
+  $response = json_encode(utf8_encode($exitPrefix . $response));
+}
+$parameters = null;
+echo $response;
+exit(0);
 
 /////////////////////////////////////////////////////////
 // FUNCTION DEFINITIONS
 
-function debug () {
+function isDebug () {
   GLOBAL $parameters;
-  return $parameters->dev->debug;
+  if ($parameters->dev && $parameters->dev->debug) {
+    return $parameters->dev->debug;
+  }
+  return false;
 }
 
-function echo2 ($text) {
-  if (debug) {
-    echo $text . PHP_EOL;
+function getDebugLinePrefix () {
+  GLOBAL $parameters;
+  if ($parameters->dev && $parameters->dev->debugLinePrefix) {
+    return $parameters->dev->debugLinePrefix;
+  }
+  return DEBUG_PREFIX;
+}
+
+function logDebug ($text) {
+  if (isDebug()) {
+    echo getDebugLinePrefix() . $text . PHP_EOL;
   }
 }
-
-invokeRequestReport($service, $request);
 
 /**
   * Get Report List Action Sample
@@ -173,71 +187,74 @@ invokeRequestReport($service, $request);
   function invokeRequestReport(MarketplaceWebService_Interface $service, $request)
   {
       try {
-              $response = $service->requestReport($request);
+                $response = $service->requestReport($request);
 
-                echo2 ("Service Response\n");
-                echo2 ("=============================================================================\n");
+                logDebug ("Service Response\n");
+                logDebug ("=============================================================================\n");
 
-                echo2("        RequestReportResponse\n");
+                logDebug("        RequestReportResponse\n");
                 if ($response->isSetRequestReportResult()) {
-                    echo2("            RequestReportResult\n");
+                    logDebug("            RequestReportResult\n");
                     $requestReportResult = $response->getRequestReportResult();
 
                     if ($requestReportResult->isSetReportRequestInfo()) {
 
                         $reportRequestInfo = $requestReportResult->getReportRequestInfo();
-                          echo2("                ReportRequestInfo\n");
+                          logDebug("                ReportRequestInfo\n");
                           if ($reportRequestInfo->isSetReportRequestId())
                           {
-                              echo2("                    ReportRequestId\n");
-                              echo2("                        " . $reportRequestInfo->getReportRequestId() . "\n");
+                              logDebug("                    ReportRequestId\n");
+                              logDebug("                        " . $reportRequestInfo->getReportRequestId() . "\n");
                           }
                           if ($reportRequestInfo->isSetReportType())
                           {
-                              echo2("                    ReportType\n");
-                              echo2("                        " . $reportRequestInfo->getReportType() . "\n");
+                              logDebug("                    ReportType\n");
+                              logDebug("                        " . $reportRequestInfo->getReportType() . "\n");
                           }
                           if ($reportRequestInfo->isSetStartDate())
                           {
-                              echo2("                    StartDate\n");
-                              echo2("                        " . $reportRequestInfo->getStartDate()->format(DATE_FORMAT) . "\n");
+                              logDebug("                    StartDate\n");
+                              logDebug("                        " . $reportRequestInfo->getStartDate()->format(DATE_FORMAT) . "\n");
                           }
                           if ($reportRequestInfo->isSetEndDate())
                           {
-                              echo2("                    EndDate\n");
-                              echo2("                        " . $reportRequestInfo->getEndDate()->format(DATE_FORMAT) . "\n");
+                              logDebug("                    EndDate\n");
+                              logDebug("                        " . $reportRequestInfo->getEndDate()->format(DATE_FORMAT) . "\n");
                           }
                           if ($reportRequestInfo->isSetSubmittedDate())
                           {
-                              echo2("                    SubmittedDate\n");
-                              echo2("                        " . $reportRequestInfo->getSubmittedDate()->format(DATE_FORMAT) . "\n");
+                              logDebug("                    SubmittedDate\n");
+                              logDebug("                        " . $reportRequestInfo->getSubmittedDate()->format(DATE_FORMAT) . "\n");
                           }
                           if ($reportRequestInfo->isSetReportProcessingStatus())
                           {
-                              echo2("                    ReportProcessingStatus\n");
-                              echo2("                        " . $reportRequestInfo->getReportProcessingStatus() . "\n");
+                              logDebug("                    ReportProcessingStatus\n");
+                              logDebug("                        " . $reportRequestInfo->getReportProcessingStatus() . "\n");
                           }
                       }
                 }
                 if ($response->isSetResponseMetadata()) {
-                    echo2("            ResponseMetadata\n");
+                    logDebug("            ResponseMetadata\n");
                     $responseMetadata = $response->getResponseMetadata();
                     if ($responseMetadata->isSetRequestId())
                     {
-                        echo2("                RequestId\n");
-                        echo2("                    " . $responseMetadata->getRequestId() . "\n");
+                        logDebug("                RequestId\n");
+                        logDebug("                    " . $responseMetadata->getRequestId() . "\n");
                     }
                 }
 
-                echo2("            ResponseHeaderMetadata: " . $response->getResponseHeaderMetadata() . "\n");
+                logDebug("            ResponseHeaderMetadata: " . $response->getResponseHeaderMetadata() . "\n");
+
+                return $response;
+
      } catch (MarketplaceWebService_Exception $ex) {
-         echo("Caught Exception: " . $ex->getMessage() . "\n");
-         echo("Response Status Code: " . $ex->getStatusCode() . "\n");
-         echo("Error Code: " . $ex->getErrorCode() . "\n");
-         echo("Error Type: " . $ex->getErrorType() . "\n");
-         echo("Request ID: " . $ex->getRequestId() . "\n");
-         echo("XML: " . $ex->getXML() . "\n");
-         echo("ResponseHeaderMetadata: " . $ex->getResponseHeaderMetadata() . "\n");
+         echo(ERROR_PREFIX . "Caught Exception: " . $ex->getMessage() . "\n");
+         echo(ERROR_PREFIX . "Response Status Code: " . $ex->getStatusCode() . "\n");
+         echo(ERROR_PREFIX . "Error Code: " . $ex->getErrorCode() . "\n");
+         echo(ERROR_PREFIX . "Error Type: " . $ex->getErrorType() . "\n");
+         echo(ERROR_PREFIX . "Request ID: " . $ex->getRequestId() . "\n");
+         echo(ERROR_PREFIX . "XML: " . $ex->getXML() . "\n");
+         echo(ERROR_PREFIX . "ResponseHeaderMetadata: " . $ex->getResponseHeaderMetadata() . "\n");
      }
  }
 
