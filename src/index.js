@@ -141,6 +141,7 @@ module.exports = async function (args) {
   let returnObj = {
     command: phpCommand,
     args: phpArgs.exec,
+    success: true,
     stdout: null,
   };
 
@@ -164,6 +165,7 @@ module.exports = async function (args) {
   }
   catch (err) {
     console.error(PACKET_NAME, err);
+    returnObj.success = false;
     returnObj.err = err;
   }
 

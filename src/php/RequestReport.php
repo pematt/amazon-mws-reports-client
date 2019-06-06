@@ -155,6 +155,8 @@ exit(0);
 // FUNCTION DEFINITIONS
 
 function isDebug () {
+  return true;
+  // todo
   GLOBAL $parameters;
   if ($parameters->dev && $parameters->dev->debug) {
     return $parameters->dev->debug;
