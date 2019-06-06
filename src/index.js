@@ -3,7 +3,7 @@
 const util = require('util');
 const exec = util.promisify(require('child_process').exec); // https://nodejs.org/api/child_process.html#child_process_child_process_exec_command_options_callback
 const path = require('path');
-const merge = require('deepmerge');
+const merge = require('deepmerge'); // https://github.com/TehShrike/deepmerge
 
 const PACKET_NAME = 'amazon-mws-reports-client';
 const PACKET_NAME_HR = 'Amazon MWS Reports Client Exception';
@@ -74,7 +74,7 @@ const argsDefault = {
   }
 }
 
-mwsApiOperationArgsDefault = {
+const mwsApiOperationArgsDefault = {
   requestReport: {
     required: {
       reportType: null,
@@ -109,23 +109,26 @@ module.exports = async function (args) {
   if (!(args)) {
     throw new ClientException('No arguments received.');
   }
-  if (!(args.api.merchant)) {
-    throw new ClientException('merchant', ERR_TYPE_MISSING);
-  }
+  // if (!(args.api.merchant)) {
+  //   throw new ClientException('merchant', ERR_TYPE_MISSING);
+  // }
   // TODO: check all mandatory properties here
 
-  // parametersIn's properties overwrites parametersDefault's properties with the same name
-  // todo: proper deep copy, not just 1st level... lodash?
-  const phpArgs = { ...argsDefault, ...args }
+  // perform deep merge. args's properties overwrites argsDefault's properties with the
+  // same name, arrays are concatenated.
+  const phpArgs = merge(argsDefault, args);
+  console.log('phpArgs:', phpArgs);
 
   const exec = util.promisify(require('child_process').exec);
   const phpScript = path.dirname(__filename) + "/php/RequestReport.php";
   const debug = phpArgs.dev && phpArgs.dev.debug;
 
   const phpCommand =
-    phpArgs.system.phpCommand + " " + phpScript + " '" + JSON.stringify(phpArgs) + "'"
+    phpArgs.system.phpCommand + " "
+    + phpScript
+    + " '" + JSON.stringify(phpArgs) + "'"
     // + " | grep 'END:-_]%£j+:'"
-    + " | tail -n " + phpArgs.result.stout.maxLines; // return only the last maxLines lines
+    + " | tail -n " + phpArgs.result.stdout.maxLines; // return only the last maxLines lines
   ;
 
   if (debug) {
@@ -135,23 +138,35 @@ module.exports = async function (args) {
     console.log(PACKET_NAME, ': path.dirname:', path.dirname(__filename));
   }
 
+  let returnObj = {
+    command: phpCommand,
+    args: phpArgs.exec,
+    stats: {
+      submittedAt: new Date(),
+    },
+  };
+
   try {
+
     const { stdout, stderr } = await exec(phpCommand, phpArgs.exec);
+
+    returnObj.stats.returnedAt = new Date();
+    returnObj.stats.durationSeconds = (returnObj.stats.returnedAt.getTime() - returnObj.stats.submittedAt.getTime()) / 1000;
+
     if (stderr) {
       console.error(PACKET_NAME, `: error: ${stderr}`);
+      returnObj.stderr = stderr;
     }
     if (debug) {
       console.log(PACKET_NAME, `: Response: ${stdout}`);
     }
-    // return the output of the phpCommand
-    return {
-      stdout: stdout,
-      stderr: stderr
-    };
+
+    returnObj.stdout = stdout;
   }
   catch (err) {
     console.error(PACKET_NAME, err);
+    returnObj.err = err;
   }
 
-  return null;
+  return returnObj;
 }
