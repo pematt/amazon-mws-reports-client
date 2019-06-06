@@ -141,17 +141,16 @@ module.exports = async function (args) {
   let returnObj = {
     command: phpCommand,
     args: phpArgs.exec,
-    stats: {
-      submittedAt: new Date(),
-    },
+    stdout: null,
+  };
+
+  let stats = {
+    submittedAt: new Date(),
   };
 
   try {
 
     const { stdout, stderr } = await exec(phpCommand, phpArgs.exec);
-
-    returnObj.stats.returnedAt = new Date();
-    returnObj.stats.durationSeconds = (returnObj.stats.returnedAt.getTime() - returnObj.stats.submittedAt.getTime()) / 1000;
 
     if (stderr) {
       console.error(PACKET_NAME, `: error: ${stderr}`);
@@ -167,6 +166,10 @@ module.exports = async function (args) {
     console.error(PACKET_NAME, err);
     returnObj.err = err;
   }
+
+  stats.returnedAt = new Date();
+  stats.durationSeconds = (returnObj.stats.returnedAt.getTime() - returnObj.stats.submittedAt.getTime()) / 1000;
+  returnObj.stats = stats;
 
   return returnObj;
 }

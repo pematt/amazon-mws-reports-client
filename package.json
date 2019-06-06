@@ -1,6 +1,6 @@
 {
   "name": "amazon-mws-reports-client",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "Amazon MWS Reports Client",
   "main": "src/index.js",
   "scripts": {
