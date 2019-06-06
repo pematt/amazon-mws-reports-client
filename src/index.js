@@ -168,7 +168,7 @@ module.exports = async function (args) {
   }
 
   stats.returnedAt = new Date();
-  stats.durationSeconds = (returnObj.stats.returnedAt.getTime() - returnObj.stats.submittedAt.getTime()) / 1000;
+  stats.durationSeconds = (stats.returnedAt.getTime() - stats.submittedAt.getTime()) / 1000;
   returnObj.stats = stats;
 
   return returnObj;
