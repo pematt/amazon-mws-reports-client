@@ -22,7 +22,7 @@
 
  *  Marketplace Web Service PHP5 Library
  *  Generated: Thu May 07 13:07:36 PDT 2009
- *  Modified 2019-05-22 (YYYY-MM-DD)
+ *  Modified 2019-06-08 (YYYY-MM-DD)
  */
 
 include_once ('.config.inc.php');
@@ -51,6 +51,7 @@ if (!$parameters) {
 }
 
 logDebug("parameters: " . serialize($parameters));
+var_dump($parameters);
 
 // todo: check for existence of all mandatory parameters
 
